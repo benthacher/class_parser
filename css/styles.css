@@ -1,0 +1,46 @@
+html, body {
+    width: 300px;
+    height: 550px;
+    overflow: hidden;
+}
+
+#progress {
+    width: 0
+}
+
+#result {
+    overflow-y: scroll;
+    overflow-x: hidden;
+    height: 360px;
+    padding: 2px;
+    border-radius: 3px;
+}
+
+#result::-webkit-scrollbar {
+    display: none;
+}
+
+#preloader {
+    display: none;
+}
+
+.green-blockquote {
+    border-left: 5px solid #4caf50 !important;
+}
+
+.red-blockquote {
+    border-left: 5px solid #e60707 !important;
+}
+
+.log-text {
+    font-size: 14px;
+}
+
+.bold {
+    font-weight: bold;
+}
+
+h4 {
+    margin-top: 0;
+    margin-bottom: 14px;
+}

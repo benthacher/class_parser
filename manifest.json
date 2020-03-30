@@ -1,0 +1,35 @@
+{
+    "manifest_version": 2,
+    "name": "Class Parser",
+    "version": "1.5.3",
+
+    "description": "Add class schedule to calendar!",
+    "icons": {
+        "512": "icon_512.png"
+    },
+
+    "author": "Ben Thacher",
+    "browser_action": {
+        "default_icon": "icon_512.png",
+        "default_title": "Class Parser",
+        "default_popup": "popup.html"
+    },
+    
+    "background": {
+        "scripts": [ "js/background.js" ],
+        "persistent": false
+    },
+
+    "oauth2": {
+        "client_id": "773401699572-prcps7glbal69pr2qp1vulu536elqi4h.apps.googleusercontent.com",
+        "scopes": [
+            "https://www.googleapis.com/auth/calendar",
+            "https://www.googleapis.com/auth/calendar.events"
+        ]
+    },
+    "permissions": [
+        "identity",
+        "activeTab"
+    ]
+
+}

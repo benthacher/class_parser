@@ -1,0 +1,54 @@
+<html>
+    <head>
+        <!--Import materialize.css-->
+        <link type="text/css" rel="stylesheet" href="css/materialize.min.css"  media="screen,projection">
+        <link rel="stylesheet" href="css/styles.css">
+
+        <script type="text/javascript" src="js/materialize.min.js"></script>
+        <script type="text/javascript" src="js/popup.js"></script>
+
+        <meta charset="UTF-8">
+    </head>
+    <body>
+        <div class="row light-blue lighten-5">
+            <div class="col s12 m6">
+                <div class="card light-blue lighten-4">
+                    <div class="card-content">
+                        <h4>Class Parser</h4>
+                        <div class="row">
+                            <div class="col">
+                                <a class="waves-effect waves-light light-blue btn" id="add-classes">Add Classes</a>
+                            </div>
+                            <div id="preloader" class="col">
+                                <div class="preloader-wrapper small active">
+                                    <div class="spinner-layer spinner-blue-only">
+                                        <div class="circle-clipper left">
+                                            <div class="circle"></div>
+                                        </div>
+                                        <div class="gap-patch">
+                                            <div class="circle"></div>
+                                        </div>
+                                        <div class="circle-clipper right">
+                                            <div class="circle"></div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- <div class="row">
+                            <div class="col">
+                                <a class="waves-effect waves-light light-blue btn" id="remove-classes">Remove Classes</a>
+                            </div>
+                        </div> -->
+        
+                        <div class="progress light-blue lighten-3">
+                            <div class="determinate light-blue" id="progress"></div>
+                        </div>
+                        <div class="light-blue lighten-5 z-depth-2" id="result"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </body>
+</html>
