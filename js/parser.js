@@ -1,7 +1,7 @@
 (function() {
     console.log('class parser has been injected!');
 
-    //            offset of Boston  + offset of client timezone
+    //            offset of Boston  - offset of client timezone
     const TIMEZONE_OFFSET = 4 - new Date().getTimezoneOffset() / 60;
 
     const DAY_STRINGS = Object.freeze({
@@ -24,8 +24,8 @@
             recurrence ✓
             professor ✓
 
-
     */
+    
     function getMetadata(table) {
         const titleData = table.querySelector('.captiontext').innerHTML.split(' - ');
 
@@ -43,10 +43,13 @@
         }
     }
 
-    function getTimedata(tds) {
+    function getTimeData(tds) {
         const dateRange = tds[4].innerHTML.split(' - ');
         let timeRange = tds[1].innerHTML.split(' - ');
         const days = tds[2].innerHTML.split('');
+
+        if (timeRange.length != 2)
+            return null;
 
         timeRange = timeRange.map(time => {
             const colonIndex = time.indexOf(':');
@@ -89,28 +92,45 @@
         };
     }
 
-    // get literally everything on banner into a nice array
+    function sendError(e) {
+        chrome.runtime.sendMessage({
+            type: 'error',
+            data: e
+        });
+    }
+
+    // get everything on banner into a nice array
     let events = [];
 
     const dataDisplayTables = document.querySelectorAll('.datadisplaytable');
 
-    for (let i = 1; i < dataDisplayTables.length; i += 2) {
-        const metadata = dataDisplayTables[i];
-        const timedata = dataDisplayTables[i + 1];
-        
-        const trs = timedata.querySelectorAll('tr');
-
-        for (let i = 1; i < trs.length; i++) {
-            const tds = trs[i].querySelectorAll('.dddefault');
+    try {
+        for (let i = 1; i < dataDisplayTables.length; i += 2) {
+            const metadata = dataDisplayTables[i];
+            const timeDataElem = dataDisplayTables[i + 1];
             
-            let classEvent = Object.assign({}, getMetadata(metadata), getTimedata(tds));
+            const trs = timeDataElem.querySelectorAll('tr');
 
-            // if type is Final Exam, add that to title
-            if (tds[0].innerHTML == 'Final Exam')
-                classEvent.summary = 'Final Exam for ' + classEvent.summary;
-            
-            events.push(classEvent);
+            for (let i = 1; i < trs.length; i++) {
+                const tds = trs[i].querySelectorAll('.dddefault');
+                
+                const timeData = getTimeData(tds);
+
+                if (!timeData)
+                    continue;
+
+                let classEvent = Object.assign({}, getMetadata(metadata), timeData);
+
+                // if type is Final Exam, add that to title
+                if (tds[0].innerHTML == 'Final Exam')
+                    classEvent.summary = 'Final Exam for ' + classEvent.summary;
+                
+                events.push(classEvent);
+            }
         }
+    } catch (e) {
+        console.error(e);
+        sendError(e);
     }
 
     const message = {
@@ -124,11 +144,6 @@
     } else {
         const error = 'Please click the extension button only from the Banner schedule website.';
         console.error(error);
-        chrome.runtime.sendMessage({
-            type: 'error',
-            data: error
-        });
+        sendError(error);
     }
 })();
-
-//new Date('Jan 06, 2020').toISOString();
