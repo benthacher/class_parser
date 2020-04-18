@@ -1,7 +1,3 @@
-// actual id
-// const API_KEY = 'AIzaSyAby797fCEZKKChuz3FtoAKQpdLr-yuzBk';
-
-// test id
 const API_KEY = 'AIzaSyAVOCo0u-Jm29wzhEZzAxuh8gVzUU8v9Ww';
 
 function sendMessage(type, data) {
