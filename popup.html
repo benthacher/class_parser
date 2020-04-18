@@ -6,6 +6,7 @@
 
         <script type="text/javascript" src="js/materialize.min.js"></script>
         <script type="text/javascript" src="js/popup.js"></script>
+        <script type="text/javascript" src="js/jscolor.js"></script>
 
         <meta charset="UTF-8">
     </head>
@@ -35,16 +36,20 @@
                                 </div>
                             </div>
                         </div>
-                        
-                        <!-- <div class="row">
+
+                        <div class="row">
                             <div class="col">
-                                <a class="waves-effect waves-light light-blue btn" id="remove-classes">Remove Classes</a>
+                                <a class="waves-effect waves-light light-blue btn-small" id="change-color">Change Color</a>
                             </div>
-                        </div> -->
+                            <div class="col">
+                                <input id="color-input" class="jscolor jscolor-active">
+                            </div>
+                        </div>
         
                         <div class="progress light-blue lighten-3">
                             <div class="determinate light-blue" id="progress"></div>
                         </div>
+
                         <div class="light-blue lighten-5 z-depth-2" id="result"></div>
                     </div>
                 </div>

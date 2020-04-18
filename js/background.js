@@ -1,21 +1,65 @@
-const API_KEY = '';
-
 chrome.runtime.onMessage.addListener(function(message) {
     console.log('message received:', message);
 
     switch (message.type) {
         case 'inject-parser':
-            chrome.tabs.executeScript({ file: 'js/parser.js' });
+            chrome.tabs.executeScript({ file: 'js/parser.js' }, () => {
+                const e = chrome.runtime.lastError;
+
+                if (e)
+                    sendMessage('display-error', e.message);
+            });
             break;
         // add data from content script to calendar as event
         case 'schedule-data':
             addEvents(message.data);
+            break;
+        case 'change-color':
+            changeColor(message.data);
             break;
         case 'error':
             sendMessage('display-error', message.data);
             break;
     }
 });
+
+function changeColor(data) {
+    console.log(data.color);
+
+    let { color, textColor } = data;
+
+    chrome.identity.getAuthToken({ 'interactive': true }, async function(token) {
+        const calendarList = await listCalendars(token);
+        const classesCalendar = calendarList.items.find(calendar => calendar.summary == 'Classes');
+        let classesCalendarID;
+
+        if (classesCalendar) {
+            sendMessage('display-success', 'Found Classes calendar');
+            classesCalendarID = classesCalendar.id;
+        } else {
+            sendMessage('display-success', 'Classes calendar not found, creating it...');
+            const result = await insertCalendar('Classes', token);
+
+            if (!result.error) {
+                sendMessage('display-success', 'Created Classes calendar');
+                classesCalendarID = result.id;
+            } else {
+                sendMessage('display-error', `Code: ${result.error.code}, Message: ${result.error.message}`);
+                return;
+            }
+        }
+
+        let result = await changeCalendarColor(classesCalendarID, color, textColor, token);
+
+        if (!result.error) {
+            sendMessage('display-success', 'Changed Classes calendar color.');
+            sendMessage('completeness-fraction', 1);
+        } else {
+            sendMessage('display-error', `Code: ${result.error.code}, Message: ${result.error.message}`);
+            return;
+        }
+    });
+}
 
 function addEvents(events) {
     chrome.identity.getAuthToken({ 'interactive': true }, async function(token) {
@@ -39,11 +83,13 @@ function addEvents(events) {
             }
         }
         
-        console.log('classesCalendarID:', classesCalendarID);
-
         const existingEvents = await listEvents(classesCalendarID, token);
         
         console.log('existing events:', existingEvents);
+
+        console.log('existing length:', existingEvents.items.length);
+        console.log('events.length:', events.length);
+        console.log('existingEvents.items.length:', existingEvents.items.length);
 
         const totalEventsToAdd = existingEvents.items.length > 0 ? events.length - existingEvents.items.length : events.length;
 

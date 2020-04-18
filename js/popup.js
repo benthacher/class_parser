@@ -1,13 +1,16 @@
 let resultElem;
 let progressElem;
 let preloaderElem;
+let colorInputElem;
 
 window.onload = () => {
     resultElem = document.querySelector('#result');
     progressElem = document.querySelector('#progress');
     preloaderElem = document.querySelector('#preloader');
+    colorInputElem = document.querySelector('#color-input');
     
     document.querySelector('#add-classes').onclick = injectParser;
+    document.querySelector('#change-color').onclick = changeColor;
 }
 
 const showPreloader = () => preloaderElem.style.display = 'inline-block';
@@ -31,7 +34,7 @@ chrome.runtime.onMessage.addListener(function(request, sender, sendResponse) {
                 hidePreloader();
                 displayMessage('Done!', 'green');
             }
-                
+
             break;
     }
 });
@@ -40,6 +43,18 @@ function injectParser() {
     showPreloader();
     
     chrome.runtime.sendMessage({ type: 'inject-parser' });
+}
+
+function changeColor() {
+    showPreloader();
+
+    chrome.runtime.sendMessage({
+        type: 'change-color',
+        data: {
+            color: colorInputElem.value,
+            textColor: colorInputElem.style.color == 'rgb(0, 0, 0)' ? '#000000' : '#ffffff'
+        }
+    });
 }
 
 function displayMessage(message, color) {

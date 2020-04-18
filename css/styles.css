@@ -44,3 +44,8 @@ h4 {
     margin-top: 0;
     margin-bottom: 14px;
 }
+
+#color-input {
+    width: 60px;
+    padding: 0px 10px !important;
+}

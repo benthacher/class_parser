@@ -1,7 +1,15 @@
 (function() {
     console.log('class parser has been injected!');
 
-    //            offset of Boston  - offset of client timezone
+    if (!Array.from(document.querySelectorAll('*')).some(elem => elem.innerHTML == 'Student Detail Schedule')) {
+        const error = 'Please click the extension button only from the Banner schedule website.';
+        
+        console.error(error);
+        sendError(error);
+        return;
+    }
+
+    // offset of Boston - offset of client timezone
     const TIMEZONE_OFFSET = 4 - new Date().getTimezoneOffset() / 60;
 
     const DAY_STRINGS = Object.freeze({
@@ -138,12 +146,6 @@
         data: events
     };
 
-    if (window.location.href.includes('https://wl11gp.neu.edu/')) {
-        chrome.runtime.sendMessage(message);
-        console.log('Schedule data sent:', (message));
-    } else {
-        const error = 'Please click the extension button only from the Banner schedule website.';
-        console.error(error);
-        sendError(error);
-    }
+    chrome.runtime.sendMessage(message);
+    console.log('Schedule data sent:', (message));
 })();
