@@ -23,11 +23,7 @@ chrome.runtime.onMessage.addListener(function(message) {
     }
 });
 
-function changeColor(data) {
-    console.log(data.color);
-
-    let { color, textColor } = data;
-
+function changeColor({ color, textColor }) {
     chrome.identity.getAuthToken({ 'interactive': true }, async function(token) {
         const calendarList = await listCalendars(token);
         const classesCalendar = calendarList.items.find(calendar => calendar.summary == 'Classes');
