@@ -1,7 +1,7 @@
-(function() {
+(async function() {
     console.log('class parser has been injected!');
 
-    if (!Array.from(document.querySelectorAll('*')).some(elem => elem.innerHTML == 'Student Detail Schedule')) {
+    if (!Array.from(document.querySelectorAll('*')).some(elem => elem.innerHTML.includes('Student Detail Schedule'))) {
         const error = 'Please click the extension button only from the Banner schedule website.';
         
         console.error(error);
@@ -23,38 +23,28 @@
     });
 
     const removeTags = s => s.replace( /(<([^>]+)>)/ig, '');
-
-    /*  
-        needed data:
-            class name ✓
-            location ✓
-            time of day ✓
-            recurrence ✓
-            professor ✓
-
-    */
     
     function getMetadata(table) {
         const titleData = table.querySelector('.captiontext').innerHTML.split(' - ');
 
         let data = {
-            summary: titleData[1],
-            description: titleData[0] + '\n'
+            summary: titleData.length > 1 ? titleData[1] : titleData[0],
+            description: titleData.length > 1 ? titleData[0] + '\n' : ''
         }
 
         for (const tr of table.querySelectorAll('tr')) {
             const ddlabel = tr.querySelector('.ddlabel');
             if (ddlabel.innerHTML == 'Assigned Instructor:') {
-                data.description += 'Professor: ' + removeTags(tr.querySelector('.dddefault').innerHTML.trim());
+                data.description += `Professor: ${removeTags(tr.querySelector('.dddefault').innerHTML.trim()) || 'TBA'}`;
                 return data;
             }
         }
     }
 
-    function getTimeData(tds) {
-        const dateRange = tds[4].innerHTML.split(' - ');
-        let timeRange = tds[1].innerHTML.split(' - ');
-        const days = tds[2].innerHTML.split('');
+    function getTimeData(keys, tds) {
+        const dateRange = tds[keys.indexOf('Date Range')].innerHTML.split(' - ');
+        let timeRange = tds[keys.indexOf('Time')].innerHTML.split(' - ');
+        const days = tds[keys.indexOf('Days')].innerHTML.split('');
 
         if (timeRange.length != 2)
             return null;
@@ -85,7 +75,7 @@
         const until = new Date(dateRange[1]);
 
         return {
-            location: removeTags(tds[3].innerHTML),
+            location: removeTags(tds[keys.indexOf('Where')].innerHTML),
             start: {
                 dateTime: startDateTime,
                 timeZone: 'America/New_York'
@@ -95,7 +85,10 @@
                 timeZone: 'America/New_York'
             },
             recurrence: [
-                `RRULE:FREQ=WEEKLY;WKST=SU;UNTIL=${new Date(until.setDate(until.getDate() + 1)).toISOString().replace(/:|-|(\.000)(?=\Z)/g, '')};BYDAY=${byDay}`
+                `RRULE:FREQ=WEEKLY;\
+                 WKST=SU;\
+                 UNTIL=${new Date(until.setDate(until.getDate() + 1)).toISOString().replace(/:|-|(\.000)(?=\Z)/g, '')};\
+                 BYDAY=${byDay}`
             ]
         };
     }
@@ -110,42 +103,50 @@
     // get everything on banner into a nice array
     let events = [];
 
-    const dataDisplayTables = document.querySelectorAll('.datadisplaytable');
+    // get all data-display-tables in the pagebodydiv
+    const dataDisplayTables = document.querySelector('.pagebodydiv').querySelectorAll('.datadisplaytable');
 
     try {
-        for (let i = 1; i < dataDisplayTables.length; i += 2) {
-            const metadata = dataDisplayTables[i];
-            const timeDataElem = dataDisplayTables[i + 1];
+        Array.from(dataDisplayTables).forEach((table, index) => {
+            // only find the scheduled meeting times table for time data, then use the table above for metadata
+            if (!table.querySelector('.captiontext').innerHTML.includes('Scheduled Meeting Times'))
+                return;
+            
+            const metadata = getMetadata(dataDisplayTables[index - 1]);
+            const timeDataElem = table;
             
             const trs = timeDataElem.querySelectorAll('tr');
 
+            // get keys for time data from table header element innerHTML
+            const keys = Array.from(trs[0].querySelectorAll('.ddheader')).map(th => th.innerHTML);
+
+            // using indexed for loops with all of ES8 is kinda gross but for now that's how it be
             for (let i = 1; i < trs.length; i++) {
                 const tds = trs[i].querySelectorAll('.dddefault');
                 
-                const timeData = getTimeData(tds);
+                const timeData = getTimeData(keys, tds);
 
                 if (!timeData)
                     continue;
 
-                let classEvent = Object.assign({}, getMetadata(metadata), timeData);
+                let classEvent = { ...metadata, ...timeData };
 
                 // if type is Final Exam, add that to title
-                if (tds[0].innerHTML == 'Final Exam')
-                    classEvent.summary = 'Final Exam for ' + classEvent.summary;
+                if (tds[keys.indexOf('Type')].innerHTML.includes('Final'))
+                    classEvent.summary = `Final Exam for ${classEvent.summary}`;
                 
                 events.push(classEvent);
             }
-        }
+        });
     } catch (e) {
         console.error(e);
         sendError(e);
     }
 
-    const message = {
+    chrome.runtime.sendMessage({
         type: 'schedule-data',
         data: events
-    };
+    });
 
-    chrome.runtime.sendMessage(message);
-    console.log('Schedule data sent:', (message));
+    console.log('Schedule data sent:', events);
 })();
