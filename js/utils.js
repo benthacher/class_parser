@@ -35,48 +35,28 @@ async function listEvents(calendarID, authToken) {
 }
 
 async function get(url, authToken) {
-    const headers = new Headers({
-        'Authorization' : 'Bearer ' + authToken,
-        'Accept': 'application/json',
-    });
-
-    const queryParams = {
-        method: 'GET',
-        headers
-    };
-    
-    const response = await fetch(url, queryParams);
-    return await response.json();
+    return await request('GET', url, '', authToken);
 }
 
-async function post(url, body, authToken) {
+async function post(...args) {
+    return await request('POST', ...args);
+}
+
+async function patch(...args) {
+    return await request('PATCH', ...args);
+}
+
+async function request(method, url, body, authToken) {
     const headers = new Headers({
         'Authorization' : 'Bearer ' + authToken,
         'Content-Type': 'application/json',
         'Accept': 'application/json',
     });
 
-    const queryParams = {
-        method: 'POST',
+    let queryParams = {
+        method,
         headers,
-        body: JSON.stringify(body)
-    };
-    
-    const response = await fetch(url, queryParams);
-    return await response.json();
-}
-
-async function patch(url, body, authToken) {
-    const headers = new Headers({
-        'Authorization' : 'Bearer ' + authToken,
-        'Content-Type': 'application/json',
-        'Accept': 'application/json',
-    });
-
-    const queryParams = {
-        method: 'PATCH',
-        headers,
-        body: JSON.stringify(body)
+        ...(body && { body })
     };
     
     const response = await fetch(url, queryParams);

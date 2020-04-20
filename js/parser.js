@@ -98,10 +98,11 @@
                 timeZone: classCity
             },
             recurrence: [
-                `RRULE:FREQ=WEEKLY;\
-                 WKST=SU;\
-                 UNTIL=${new Date(until.setDate(until.getDate() + 1)).toISOString().replace(/:|-|(\.000)(?=\Z)/g, '')};\
-                 BYDAY=${byDay}`
+                `\
+RRULE:FREQ=WEEKLY;\
+WKST=SU;\
+UNTIL=${new Date(until.setDate(until.getDate() + 1)).toISOString().replace(/:|-|(\.000)(?=\Z)/g, '')};\
+BYDAY=${byDay}`
             ]
         };
     }
