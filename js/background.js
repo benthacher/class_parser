@@ -82,6 +82,12 @@ function addEvents(events) {
         sendMessage('display-success', 'Granted!');
 
         const calendarList = await listCalendars(token);
+
+        if (calendarList.error) {
+            sendMessage('display-error', `Code: ${calendarList.error.code}, Message: ${calendarList.error.message}`);
+            return;
+        }
+
         const classesCalendar = calendarList.items.find(calendar => calendar.summary == 'Classes');
         let classesCalendarID;
 
@@ -104,28 +110,24 @@ function addEvents(events) {
         const existingEvents = await listEvents(classesCalendarID, token);
         
         console.log('existing events:', existingEvents);
+        console.log('events prefilter:', events);
 
-        console.log('existing length:', existingEvents.items.length);
-        console.log('events.length:', events.length);
-        console.log('existingEvents.items.length:', existingEvents.items.length);
+        events = events.filter(event => !existingEvents.items.find(existingEvent => event.summary == existingEvent.summary));
 
-        const totalEventsToAdd = existingEvents.items.length > 0 ? events.length - existingEvents.items.length : events.length;
+        console.log('events postfilter:', events);
 
         let eventsAdded = 0;
         let errorsOccurred = false;
 
         for (const event of events) {
-            if (existingEvents.items.find(existingEvent => event.summary == existingEvent.summary))
-                continue;
-            
             let result = await insertEvent(event, classesCalendarID, token);
 
             console.log(event.summary, result);
 
             if (result.status == 'confirmed') {
                 eventsAdded++;
-                sendMessage('display-success', `[${eventsAdded} of ${totalEventsToAdd}] ${event.summary} has been added!`);
-                sendMessage('completeness-fraction', eventsAdded / totalEventsToAdd);
+                sendMessage('display-success', `[${eventsAdded} of ${events.length}] ${event.summary} has been added!`);
+                sendMessage('completeness-fraction', eventsAdded / events.length);
             } else if (result.error) {
                 sendMessage('display-error', `Code: ${result.error.code}, Message: ${result.error.message}`);
                 errorsOccurred = true;
@@ -138,7 +140,7 @@ function addEvents(events) {
         } else if (!eventsAdded && errorsOccurred)
             sendMessage('display-error', 'No events could be added.');
         else if (eventsAdded && errorsOccurred) {
-            sendMessage('display-error', `${totalEventsToAdd - eventsAdded} events could not be added.`);
+            sendMessage('display-error', `${events.length - eventsAdded} events could not be added.`);
             sendMessage('completeness-fraction', 1);
         }
     });
