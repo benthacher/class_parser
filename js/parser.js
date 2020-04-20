@@ -9,8 +9,13 @@
         return;
     }
 
-    // offset of Boston - offset of client timezone
-    const TIMEZONE_OFFSET = 4 - new Date().getTimezoneOffset() / 60;
+    const [ classOffset, classCity ] = await getClassTimezone();
+
+    if (!classOffset || !classCity)
+        return;
+    
+    // offset of class location - offset of client timezone
+    const TIMEZONE_OFFSET = new Date().getTimezoneOffset() / 60 + parseInt(classOffset);
 
     const DAY_STRINGS = Object.freeze({
         'S': 'SU',
@@ -23,6 +28,14 @@
     });
 
     const removeTags = s => s.replace( /(<([^>]+)>)/ig, '');
+
+    function getClassTimezone() {
+        return new Promise(resolve => {
+            chrome.runtime.sendMessage({ type: 'get-class-timezone' }, function(response) {
+                resolve(response);
+            });
+        });
+    }
     
     function getMetadata(table) {
         const titleData = table.querySelector('.captiontext').innerHTML.split(' - ');
@@ -78,11 +91,11 @@
             location: removeTags(tds[keys.indexOf('Where')].innerHTML),
             start: {
                 dateTime: startDateTime,
-                timeZone: 'America/New_York'
+                timeZone: classCity
             },
             end: {
                 dateTime: endDateTime,
-                timeZone: 'America/New_York'
+                timeZone: classCity
             },
             recurrence: [
                 `RRULE:FREQ=WEEKLY;\
@@ -109,7 +122,7 @@
     try {
         Array.from(dataDisplayTables).forEach((table, index) => {
             // only find the scheduled meeting times table for time data, then use the table above for metadata
-            if (!table.querySelector('.captiontext').innerHTML.includes('Scheduled Meeting Times'))
+            if (!table.querySelector('.captiontext') || !table.querySelector('.captiontext').innerHTML.includes('Scheduled Meeting Times'))
                 return;
             
             const metadata = getMetadata(dataDisplayTables[index - 1]);
@@ -140,7 +153,7 @@
         });
     } catch (e) {
         console.error(e);
-        sendError(e);
+        sendError(e.message);
     }
 
     chrome.runtime.sendMessage({

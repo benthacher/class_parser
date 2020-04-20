@@ -17,5 +17,5 @@ The "Add Classes" button must only be pressed on the banner schedule website, ac
 ## TODO:
 - [ ] Add delete feature
 - [x] Add more error handling
-- [ ] Add support for timezones other than EST because I forgot those existed
+- [x] Add support for timezones other than EST because I forgot those existed
 - [ ] Fix existing timezone issue to account for daylight savings

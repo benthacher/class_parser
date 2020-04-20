@@ -2,8 +2,9 @@ let resultElem;
 let progressElem;
 let preloaderElem;
 let colorInputElem;
+let timezoneSelector;
 
-window.onload = () => {
+window.onload = async () => {
     resultElem = document.querySelector('#result');
     progressElem = document.querySelector('#progress');
     preloaderElem = document.querySelector('#preloader');
@@ -11,15 +12,50 @@ window.onload = () => {
     
     document.querySelector('#add-classes').onclick = injectParser;
     document.querySelector('#change-color').onclick = changeColor;
+
+    const timezones = (await import('./timezones.js')).default;
+
+    timezoneSelector = document.querySelector('#timezone-selector');
+
+    const regions = {};
+
+    console.log(timezones.length);
+
+    timezones.forEach(tz => {
+        const [ city ] = tz.utc;
+
+        if (!city)
+            return;
+
+        const [ region ] = city.split('/');
+        
+        if (!(region in regions)) {
+            console.log('region not in regions (good)');
+
+            const regionElem = document.createElement('optgroup');
+            regionElem.label = region;
+
+            timezoneSelector.appendChild(regionElem);
+            regions[region] = regionElem;
+        }
+
+        let option = document.createElement('option');
+        option.innerHTML = `${tz.value} (${tz.offset >= 0 ? `+${tz.offset}` : tz.offset})`;
+        option.value = `${tz.offset};${city}`;
+
+        regions[region].appendChild(option);
+    });
 }
 
-const showPreloader = () => preloaderElem.style.display = 'inline-block';
+const showPreloader = () => {
+    preloaderElem.style.display = 'inline-block';
+    resultElem.innerHTML = '';
+};
 const hidePreloader = () => preloaderElem.style.display = 'none';
 
 chrome.runtime.onMessage.addListener(function(request, sender, sendResponse) {
     switch (request.type) {
         case 'display-success':
-            showPreloader();
             displayMessage(request.data, 'green');
             break;
         case 'display-error':
@@ -36,11 +72,20 @@ chrome.runtime.onMessage.addListener(function(request, sender, sendResponse) {
             }
 
             break;
+        case 'get-class-timezone':
+            sendResponse(timezoneSelector.value.split(';'));
+            break;
     }
 });
 
 function injectParser() {
     showPreloader();
+
+    if (!timezoneSelector.value) {
+        displayMessage('Error: Timezone cannot be blank', 'red');
+        hidePreloader();
+        return;
+    }
     
     chrome.runtime.sendMessage({ type: 'inject-parser' });
 }
