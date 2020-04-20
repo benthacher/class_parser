@@ -1,11 +1,11 @@
 <html>
     <head>
-        <!--Import materialize.css-->
         <link type="text/css" rel="stylesheet" href="css/materialize.min.css"  media="screen,projection">
         <link rel="stylesheet" href="css/styles.css">
 
         <script type="text/javascript" src="js/materialize.min.js"></script>
-        <script type="text/javascript" src="js/popup.js"></script>
+        <script type="module" src="js/timezones.js"></script>
+        <script type="module" src="js/popup.js"></script>
         <script type="text/javascript" src="js/jscolor.js"></script>
 
         <meta charset="UTF-8">
@@ -36,6 +36,12 @@
                                 </div>
                             </div>
                         </div>
+
+                        <select id="timezone-selector" class="browser-default">
+                            <option value="" disabled selected>Choose schedule timezone</option>
+                        </select>
+
+                        <br>
 
                         <div class="row">
                             <div class="col">

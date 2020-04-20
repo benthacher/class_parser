@@ -24,7 +24,18 @@ chrome.runtime.onMessage.addListener(function(message) {
 });
 
 function changeColor({ color, textColor }) {
+    sendMessage('display-success', 'Getting permission...');
+
     chrome.identity.getAuthToken({ 'interactive': true }, async function(token) {
+        const e = chrome.runtime.lastError;
+
+        if (!token) {
+            sendMessage('display-error', e.message);
+            return;
+        }
+        
+        sendMessage('display-success', 'Granted!');
+
         const calendarList = await listCalendars(token);
         const classesCalendar = calendarList.items.find(calendar => calendar.summary == 'Classes');
         let classesCalendarID;
@@ -58,7 +69,18 @@ function changeColor({ color, textColor }) {
 }
 
 function addEvents(events) {
+    sendMessage('display-success', 'Getting permission...');
+
     chrome.identity.getAuthToken({ 'interactive': true }, async function(token) {
+        const e = chrome.runtime.lastError;
+
+        if (!token) {
+            sendMessage('display-error', e.message);
+            return;
+        }
+        
+        sendMessage('display-success', 'Granted!');
+
         const calendarList = await listCalendars(token);
         const classesCalendar = calendarList.items.find(calendar => calendar.summary == 'Classes');
         let classesCalendarID;
