@@ -56,7 +56,7 @@ async function request(method, url, body, authToken) {
     let queryParams = {
         method,
         headers,
-        ...(body && { body })
+        ...(body && { body: JSON.stringify(body) })
     };
     
     const response = await fetch(url, queryParams);
