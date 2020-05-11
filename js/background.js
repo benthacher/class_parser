@@ -1,3 +1,8 @@
+const Method = Object.freeze({
+    ADD: 0,
+    DELETE: 1
+});
+
 chrome.runtime.onMessage.addListener(function(message) {
     console.log('message received:', message);
 
@@ -12,7 +17,10 @@ chrome.runtime.onMessage.addListener(function(message) {
             break;
         // add data from content script to calendar as event
         case 'schedule-data':
-            addEvents(message.data);
+            getMethod().then(method => {
+                processEvents(message.data, method);
+            });
+
             break;
         case 'change-color':
             changeColor(message.data);
@@ -68,7 +76,15 @@ function changeColor({ color, textColor }) {
     });
 }
 
-function addEvents(events) {
+function getMethod() {
+    return new Promise(resolve => {
+        chrome.runtime.sendMessage({ type: 'get-method' }, function(response) {
+            resolve(response);
+        });
+    });
+}
+
+function processEvents(events, method) {
     sendMessage('display-success', 'Getting permission...');
 
     chrome.identity.getAuthToken({ 'interactive': true }, async function(token) {
@@ -95,14 +111,19 @@ function addEvents(events) {
             sendMessage('display-success', 'Found Classes calendar');
             classesCalendarID = classesCalendar.id;
         } else {
-            sendMessage('display-success', 'Classes calendar not found, creating it...');
-            const result = await insertCalendar('Classes', token);
+            if (method == Method.ADD) {
+                sendMessage('display-success', 'Classes calendar not found, creating it...');
+                const result = await insertCalendar('Classes', token);
 
-            if (!result.error) {
-                sendMessage('display-success', 'Created Classes calendar');
-                classesCalendarID = result.id;
-            } else {
-                sendMessage('display-error', `Code: ${result.error.code}, Message: ${result.error.message}`);
+                if (!result.error) {
+                    sendMessage('display-success', 'Created Classes calendar');
+                    classesCalendarID = result.id;
+                } else {
+                    sendMessage('display-error', `Code: ${result.error.code}, Message: ${result.error.message}`);
+                    return;
+                }
+            } else if (method == Method.DELETE) {
+                sendMessage('display-success', 'Classes calendar not found, nothing to delete');
                 return;
             }
         }
@@ -110,37 +131,51 @@ function addEvents(events) {
         const existingEvents = await listEvents(classesCalendarID, token);
         
         console.log('existing events:', existingEvents);
-        console.log('events prefilter:', events);
+        
+        if (method == Method.ADD)
+            events = events.filter(event => !existingEvents.items.find(existingEvent => event.summary == existingEvent.summary));
+        else if (method == Method.DELETE)
+            events = existingEvents.items.filter(existingEvent => events.find(event => event.summary == existingEvent.summary));
 
-        events = events.filter(event => !existingEvents.items.find(existingEvent => event.summary == existingEvent.summary));
+        console.log('events post filter:', events);
 
-        console.log('events postfilter:', events);
-
-        let eventsAdded = 0;
+        let eventsProcessed = 0;
         let errorsOccurred = false;
 
+        if (method == Method.ADD)
+            processString = 'added';
+        else if (method == Method.DELETE)
+            processString = 'deleted';
+
         for (const event of events) {
-            let result = await insertEvent(event, classesCalendarID, token);
+            let result;
+
+            if (method == Method.ADD)
+                result = await insertEvent(event, classesCalendarID, token);
+            else if (method == Method.DELETE)
+                result = await deleteEvent(event.id, classesCalendarID, token);
 
             console.log(event.summary, result);
 
-            if (result.status == 'confirmed') {
-                eventsAdded++;
-                sendMessage('display-success', `[${eventsAdded} of ${events.length}] ${event.summary} has been added!`);
-                sendMessage('completeness-fraction', eventsAdded / events.length);
+            if ((typeof result == 'boolean' && result) || result.status == 'confirmed') {
+                eventsProcessed++;
+                sendMessage('display-success', `[${eventsProcessed} of ${events.length}] ${event.summary} has been ${processString}!`);
+                sendMessage('completeness-fraction', eventsProcessed / events.length);
             } else if (result.error) {
                 sendMessage('display-error', `Code: ${result.error.code}, Message: ${result.error.message}`);
                 errorsOccurred = true;
             }
         }
 
-        if (!eventsAdded && !errorsOccurred) {
-            sendMessage('display-success', 'Events have already been added.');
+        let processString = '';
+
+        if (!eventsProcessed && !errorsOccurred) {
+            sendMessage('display-success', `Events have already been ${processString}.`);
             sendMessage('completeness-fraction', 1);
-        } else if (!eventsAdded && errorsOccurred)
-            sendMessage('display-error', 'No events could be added.');
-        else if (eventsAdded && errorsOccurred) {
-            sendMessage('display-error', `${events.length - eventsAdded} events could not be added.`);
+        } else if (!eventsProcessed && errorsOccurred)
+            sendMessage('display-error', `No events could be ${processString}.`);
+        else if (eventsProcessed && errorsOccurred) {
+            sendMessage('display-error', `${events.length - eventsProcessed} events could not be ${processString}.`);
             sendMessage('completeness-fraction', 1);
         }
     });
