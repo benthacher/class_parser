@@ -4,13 +4,22 @@ let preloaderElem;
 let colorInputElem;
 let timezoneSelector;
 
+const Method = Object.freeze({
+    ADD: 0,
+    DELETE: 1
+});
+
+let currentMethod;
+
 window.onload = async () => {
     resultElem = document.querySelector('#result');
     progressElem = document.querySelector('#progress');
     preloaderElem = document.querySelector('#preloader');
     colorInputElem = document.querySelector('#color-input');
     
-    document.querySelector('#add-classes').onclick = injectParser;
+    document.querySelector('#add-classes').onclick = () => injectParser(Method.ADD);
+    document.querySelector('#remove-classes').onclick = () => injectParser(Method.DELETE);
+
     document.querySelector('#change-color').onclick = changeColor;
 
     const timezones = (await import('./timezones.js')).default;
@@ -18,8 +27,6 @@ window.onload = async () => {
     timezoneSelector = document.querySelector('#timezone-selector');
 
     const regions = {};
-
-    console.log(timezones.length);
 
     timezones.forEach(tz => {
         const [ city ] = tz.utc;
@@ -30,8 +37,6 @@ window.onload = async () => {
         const [ region ] = city.split('/');
         
         if (!(region in regions)) {
-            console.log('region not in regions (good)');
-
             const regionElem = document.createElement('optgroup');
             regionElem.label = region;
 
@@ -75,11 +80,15 @@ chrome.runtime.onMessage.addListener(function(request, sender, sendResponse) {
         case 'get-class-timezone':
             sendResponse(timezoneSelector.value.split(';'));
             break;
+        case 'get-method':
+            sendResponse(currentMethod);
     }
 });
 
-function injectParser() {
+function injectParser(method) {
     showPreloader();
+
+    currentMethod = method;
 
     if (!timezoneSelector.value) {
         displayMessage('Error: Timezone cannot be blank', 'red');

@@ -15,6 +15,10 @@ async function insertCalendar(calendarSummary, authToken) {
     return await post(`https://www.googleapis.com/calendar/v3/calendars?key=${API_KEY}`, { "summary": calendarSummary }, authToken);
 }
 
+async function deleteEvent(eventID, calendarID, authToken) {
+    return await request('DELETE', `https://www.googleapis.com/calendar/v3/calendars/${calendarID}/events/${eventID}?key=${API_KEY}`, null, authToken);
+}
+
 async function changeCalendarColor(calendarID, color, textColor, authToken) {
     const body = {
         "backgroundColor": color,
@@ -60,5 +64,11 @@ async function request(method, url, body, authToken) {
     };
     
     const response = await fetch(url, queryParams);
-    return await response.json();
+
+    switch (response.status) {
+        case 200:
+            return await response.json();
+        case 204:
+            return true;
+    }
 }
