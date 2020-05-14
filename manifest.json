@@ -5,7 +5,9 @@
 
     "description": "Add class schedule to calendar!",
     "icons": {
-        "512": "icon_512.png"
+        "16": "icon_16.png",
+        "48": "icon_48.png",
+        "128": "icon_128.png"
     },
 
     "author": "Ben Thacher",
@@ -21,7 +23,7 @@
     },
 
     "oauth2": {
-        "client_id": "134001920835-2hft9jf2ok0i6oou3qku8t2f4n94mnjf.apps.googleusercontent.com",
+        "client_id": "273382104694-sd929fq35pauhq0q0q5mpevs650oto0j.apps.googleusercontent.com",
         "scopes": [
             "https://www.googleapis.com/auth/calendar",
             "https://www.googleapis.com/auth/calendar.events"
