@@ -5,7 +5,9 @@
 
     "description": "Add class schedule to calendar!",
     "icons": {
-        "512": "icon_512.png"
+        "16": "icon_16.png",
+        "48": "icon_48.png",
+        "128": "icon_128.png"
     },
 
     "author": "Ben Thacher",
