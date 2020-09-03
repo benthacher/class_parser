@@ -99,6 +99,8 @@ function processEvents(events, method) {
 
         const calendarList = await listCalendars(token);
 
+        console.log(calendarList);
+
         if (calendarList.error) {
             sendMessage('display-error', `Code: ${calendarList.error.code}, Message: ${calendarList.error.message}`);
             return;
@@ -141,6 +143,7 @@ function processEvents(events, method) {
 
         let eventsProcessed = 0;
         let errorsOccurred = false;
+        let processString = '';
 
         if (method == Method.ADD)
             processString = 'added';
@@ -166,8 +169,6 @@ function processEvents(events, method) {
                 errorsOccurred = true;
             }
         }
-
-        let processString = '';
 
         if (!eventsProcessed && !errorsOccurred) {
             sendMessage('display-success', `Events have already been ${processString}.`);
