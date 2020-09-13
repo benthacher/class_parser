@@ -1,7 +1,7 @@
 {
     "manifest_version": 2,
     "name": "Class Parser",
-    "version": "1.7.2",
+    "version": "1.7.3",
 
     "description": "Add class schedule to calendar!",
     "icons": {
@@ -23,7 +23,7 @@
     },
 
     "oauth2": {
-        "client_id": "273382104694-sd929fq35pauhq0q0q5mpevs650oto0j.apps.googleusercontent.com",
+        "client_id": "",
         "scopes": [
             "https://www.googleapis.com/auth/calendar",
             "https://www.googleapis.com/auth/calendar.events"
