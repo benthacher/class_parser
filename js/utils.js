@@ -60,6 +60,7 @@ async function request(method, url, body, authToken) {
     let queryParams = {
         method,
         headers,
+        // this nice little line only adds body data if there is any
         ...(body && { body: JSON.stringify(body) })
     };
     
